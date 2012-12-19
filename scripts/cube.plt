@@ -1,0 +1,30 @@
+TITLE     = "cube"
+VARIABLES = "X"
+"Y"
+"Z"
+ZONE T="ZONE 001"
+ STRANDID=0, SOLUTIONTIME=0
+  Nodes=9, Elements=12, ZONETYPE=FETriangle
+   DATAPACKING=POINT
+    DT=(SINGLE SINGLE SINGLE )
+-2.0 2.0 -2.0
+2.0 2.0 -2.0
+2.0 -2.0 -2.0
+-2.0 -2.0 -2.0
+-2.0 2.0 2.0
+2.0 2.0 2.0
+2.0 -2.0 2.0
+-2.0 -2.0 2.0
+1.0 0.0 0.0
+1 2 3
+3 4 1
+5 7 6
+7 5 8
+1 6 2
+6 1 5
+2 7 3
+7 2 6
+8 3 7
+3 8 4
+4 8 5
+4 5 1
