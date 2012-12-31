@@ -1,4 +1,4 @@
-lammps-extentions
+lammps-extensions
 =================
 
 code used in lammps
