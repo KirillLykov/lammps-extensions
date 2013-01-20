@@ -112,7 +112,6 @@ void FixCountAtoms::end_of_step()
       if (m_region->match(x[i][0], x[i][1], x[i][2])) {
         MathExtra::add3(localAvgVel, atom->v[i], localAvgVel);
         ++countLocal;
-        //atom->type[i] = 1;
       }
     }
   }
@@ -153,41 +152,9 @@ void FixCountAtoms::writeResult()
   file.close();
 }
 
-//for optimization, it is better to create communicator for active procs
 MPI_Comm FixCountAtoms::createCommunicator()
 {
-
   MPI_Comm communicator = MPI_COMM_NULL;
-/* code in comment do the same as MPI_Comm_split. left it here if I will need to work with deprecated MPI version
-  int globalCount = 0;
-  int countLocal = m_isActive ? 1 : 0;
-  MPI_Allreduce(&countLocal, &globalCount, 1, MPI_INT, MPI_SUM, world);
-
-  std::vector<int> localRanks(comm->nprocs);
-  memset(&localRanks[0], 0, comm->nprocs * sizeof(localRanks[0]));
-  localRanks[comm->me] = m_isActive ? comm->me : INT_MAX;
-  std::vector<int> globalRanks(comm->nprocs);
-  memset(&globalRanks[0], 0, comm->nprocs * sizeof(globalRanks[0]));
-  MPI_Allreduce(&localRanks[0], &globalRanks[0], comm->nprocs, MPI_INT, MPI_SUM, world);
-
-  std::sort(globalRanks.begin(), globalRanks.end()); // interested in [0, globalCount-1]
-
-  std::vector<int> ranks(globalCount);
-  std::copy(globalRanks.begin(), globalRanks.begin() + globalCount, ranks.begin());
-
-  if (comm->me == 0) {
-    for (std::vector<int>::iterator it=ranks.begin(); it!=ranks.end(); ++it)
-      std::cout << " " << *it;
-    std::cout << std::endl;
-  }
-
-  MPI_Group orig_group, new_group;
-  MPI_Comm_group(world, &orig_group);
-  int res = MPI_Group_incl(orig_group, globalCount, &ranks[0], &new_group);
-  if (res == MPI_SUCCESS) {
-    MPI_Comm_create(world, new_group, &communicator);
-  }
-*/
   MPI_Comm_split(world, m_isActive ? 0 : MPI_UNDEFINED , comm->me, &communicator);
   return communicator;
 }
