@@ -15,6 +15,12 @@
    Contributing author: Pieter in 't Veld (SNL)
 ------------------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------------
+   Modifications for writing in TecPlot data format were done by Kirill Lykov
+   For details, see 
+   http://kirilllykov.github.com/blog/2012/12/20/lammps-data-formats-into-tecplot-ascii-data-format/
+------------------------------------------------------------------------- */
+
 #include "stdlib.h"
 #include "string.h"
 #include "fix_ave_spatial.h"

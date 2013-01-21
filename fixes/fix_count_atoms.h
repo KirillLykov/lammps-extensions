@@ -26,14 +26,15 @@ class FixCountAtoms : public Fix {
   int m_root;
   double m_velDir[3];
   double m_avgVel[3];
+  bigint m_firstTimeStep;
  public:
   FixCountAtoms(class LAMMPS *, int, char **);
   virtual ~FixCountAtoms();
   int setmask();
   void setup(int);
   void end_of_step();
- private:
-  void writeResult();
+ protected:
+  virtual void writeResult();
   MPI_Comm createCommunicator();
 };
 
