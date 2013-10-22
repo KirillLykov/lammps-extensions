@@ -1,4 +1,7 @@
 #! /bin/bash
+# (C) Copyright Kirill Lykov 2013.
+# Distributed under the GNU Software License (See accompanying file LICENSE)
+
 if [[ $# == 1 ]] && [[ $1 == "--help" ]] ; then 
 echo "Used for sorting part of atoms files. Input parameters are filename, from which line to which you need to sort"
 exit

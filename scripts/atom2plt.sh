@@ -1,4 +1,7 @@
 #! /bin/bash
+# (C) Copyright Kirill Lykov 2013.
+# Distributed under the GNU Software License (See accompanying file LICENSE)
+
 # requirements - Velocities or Bonds section is after Atoms
 # Dihedrals Section is right after Angles
 

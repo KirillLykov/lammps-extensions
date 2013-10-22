@@ -1,9 +1,6 @@
-/*
- * region_complement.cpp
- *
- *  Created on: June 26, 2012
- *      Author: kirill lykov
- */
+//  (C) Copyright Kirill Lykov 2013.
+//
+// Distributed under the GNU Software License (See accompanying file LICENSE)
 
 #include "region_complement.h"
 #include "stdlib.h"
