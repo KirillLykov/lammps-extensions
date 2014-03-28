@@ -15,7 +15,7 @@
    Contributing author: Kirill Lykov
 ------------------------------------------------------------------------- */
 
-#include "MoleculeCounter.h"
+#include "molecule_counter.h"
 #include "memory.h"
 #include "error.h"
 #include "atom.h"
