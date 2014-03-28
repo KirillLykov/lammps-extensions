@@ -2,8 +2,8 @@
 //
 // Distributed under the GNU Software License (See accompanying file LICENSE)
 
-#ifndef UTILS_BC_H_
-#define UTILS_BC_H_
+#ifndef GATHER_CONTAINERS_H_
+#define GATHER_CONTAINERS_H_
 
 #include "mpi.h"
 #include <vector>
@@ -50,4 +50,4 @@ void allGatherUnionOfContainers(const SetInt& localSet, MPI_Comm communicator, S
 template<>
 void allGatherUnionOfContainers(const MapIntInt& localMap, MPI_Comm communicator, MapIntInt& globalUnionVector);
 
-#endif /* UTILS_BC_H_ */
+#endif /* GATHER_CONTAINERS_H_ */
