@@ -68,7 +68,7 @@ protected:
  *  MyFix::MyFix(LAMMPS *lmp, int narg, char **arg)
  *  : densCalc(lmp, groupbit, 0) {}
  *
- *  void FixWallProbability::setup(int)
+ *  void MyFix::setup(int)
  *  {
  *    densCalc.setup();
  *  }
