@@ -8,6 +8,10 @@ from collections import OrderedDict
 
 class Atom2objTranslator:
     
+    # max area and edge length used to skip triangles which are separated by pbc
+    maxEdgeLegth2 = 2.0
+    maxTriangleArea2 = 2.0
+    
     def is_not_atom_section(self, s):
         return (s.rstrip() != "Atoms")
     
@@ -46,6 +50,39 @@ class Atom2objTranslator:
             v = int(words[i])
             res.append(v)
         return res
+    
+    def getPointFromLine(self, line):
+        words = line.split()
+        res = list()
+        for i in range(3, 6):
+            res.append(float(words[i]))
+        return res
+    
+    #remove angles with too long edges or big area
+    def angleIsBig(self, atomsDict, line):
+        words = line.split()
+
+        pointA = self.getPointFromLine(atomsDict[ int(words[2]) ])
+        pointB = self.getPointFromLine(atomsDict[ int(words[3]) ])
+        pointC = self.getPointFromLine(atomsDict[ int(words[4]) ])
+        
+        bma = list()
+        lengthBma2 = 0.0
+        cma = list()
+        lengthCma2 = 0.0
+        for i in range(0, 3):
+            bma.append(pointB[i] - pointA[i])
+            lengthBma2 = lengthBma2 + (pointB[i] - pointA[i])*(pointB[i] - pointA[i])
+            cma.append(pointC[i] - pointA[i])
+            lengthCma2 = lengthCma2 + (pointC[i] - pointA[i])*(pointC[i] - pointA[i])
+        
+        area2 = (bma[1]*cma[2] - bma[2]*cma[1])*(bma[1]*cma[2] - bma[2]*cma[1]) + \
+        (bma[2]*cma[0] - bma[0]*cma[2])*(bma[2]*cma[0] - bma[0]*cma[2]) + \
+        (cma[0]*bma[1] - bma[0]*cma[1])*(cma[0]*bma[1] - bma[0]*cma[1])
+        
+        if lengthBma2 > self.maxEdgeLegth2 or lengthCma2 > self.maxEdgeLegth2 or area2 > self.maxTriangleArea2:
+            return True
+        return False
     
     # get sorted lines from file according to the fist number (required by obj format)
     def getSortedAtomsLines(self, lines):
@@ -113,7 +150,7 @@ class Atom2objTranslator:
                     outLine = self.atom2vertex(line)
                     if ind in verticesFromAngles:
                         output.write(outLine + "\n")
-                    newLineInd = newLineInd + 1
+                        newLineInd = newLineInd + 1
                 
                 # parse Angles
                 output.write("\n# Triangle list\n\n")
@@ -132,13 +169,11 @@ class Atom2objTranslator:
                     
                     if (not self.checkAngle(vertices, line)):
                         raise RuntimeError("There are vertices from Angles section which are not in Atoms section. Line content is \"" + line + "\"")
-                    outLine = self.angle2face(line, old2new)
-                    output.write(outLine + "\n")
+                    if (not self.angleIsBig(atomsDict, line)):
+                        outLine = self.angle2face(line, old2new)
+                        output.write(outLine + "\n")
                     
         except IOError:
             print("Error: can\'t find file or read data")
         except RuntimeError as e:
             print(e.args)
-        finally:            
-            f.close()
-            output.close()
