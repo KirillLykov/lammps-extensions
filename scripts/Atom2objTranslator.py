@@ -24,10 +24,12 @@ class Atom2objTranslator:
         self.colors = colors
             
     def is_not_atom_section(self, s):
-        return (s.rstrip() != "Atoms")
+        ss = s.rstrip().split() + [""]
+        return (ss[0] != "Atoms")
     
     def is_not_angle_section(self, s):
-        return (s.rstrip() != "Angles")
+        ss = s.rstrip().split() + [""] # just to avoid check on size
+        return (ss[0] != "Angles")
     
     def getAtomIndex(self, s):
         words = s.split()
@@ -114,7 +116,7 @@ class Atom2objTranslator:
             line = line.rstrip()
             line = line.rstrip()
             # skip Atoms and the first line after Atoms section
-            if (line == "Atoms"): continue
+            if ((line.split() + [""])[0] == "Atoms"): continue
             if ((not line) and (not alreadyParsed)):
                 alreadyParsed = True
                 continue
@@ -144,7 +146,7 @@ class Atom2objTranslator:
                 for line in lines:
                     line = line.rstrip()
                     # skip Atoms and the first line after Angles section
-                    if (line == "Angles"): continue
+                    if ((line.split() + [""])[0] == "Angles"): continue
                     if ((not line) and (not alreadyParsed)):
                         alreadyParsed = True
                         continue
@@ -191,7 +193,7 @@ class Atom2objTranslator:
                 for line in lines:
                     line = line.rstrip()
                     # skip Atoms and the first line after Angles section
-                    if (line == "Angles"): continue
+                    if ((line.split() + [""])[0] == "Angles"): continue
                     if ((not line) and (not alreadyParsed)):
                         alreadyParsed = True
                         continue
