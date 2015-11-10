@@ -9,7 +9,7 @@
 #include "variable.h"
 #include "error.h"
 #include "math_extra.h"
-#include "rbc_utils.h"
+#include "../utils/gather_containers.h"
 #include "atom.h"
 #include "neighbor.h"
 #include "comm.h"
@@ -20,7 +20,7 @@
 using namespace LAMMPS_NS;
 
 namespace {
-  // aux structure used for easy sorting of linearized array of point
+  // aux structure used for ease sorting of linearized array of points
   struct Point {
     float tag, x, y, z;
   };
@@ -74,7 +74,7 @@ int FixDumpMesh::setmask()
 
 void FixDumpMesh::setup(int)
 {
-  // count n particles of interest
+  // contruct mapping from vertices indices in obj file to tags we are interested in
   std::vector<int> localVertInd2Tag;
   for (int i = 0; i < atom->nlocal; ++i) {
     if (atom->mask[i] & groupbit) {
@@ -91,15 +91,15 @@ void FixDumpMesh::setup(int)
     put(globalVertInd2Tag[i], i, m_tags2VertInd);
   }
 
-  // collect all relevant triangles, assumed that topology is const
+  // collect all relevant triangles, assumed that topology is constant during the run
   std::vector<int> localTriangulation;
   for (int i = 0; i < atom->nlocal; ++i) {
     if (atom->mask[i] & groupbit) {
       int num_angle = atom->num_angle[i];
       for (int m = 0; m < num_angle; ++m) {
-          localTriangulation.push_back(atom->angle_atom1[i][m]);
-          localTriangulation.push_back(atom->angle_atom2[i][m]);
-          localTriangulation.push_back(atom->angle_atom3[i][m]);
+        localTriangulation.push_back(atom->angle_atom1[i][m]);
+        localTriangulation.push_back(atom->angle_atom2[i][m]);
+        localTriangulation.push_back(atom->angle_atom3[i][m]);
       }
     }
   }
