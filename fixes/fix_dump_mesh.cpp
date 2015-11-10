@@ -1,4 +1,4 @@
-//  (C) Copyright Kirill Lykov 2013.
+//  (C) Copyright Kirill Lykov 2015.
 //
 // Distributed under the GNU Software License (See accompanying file LICENSE)
 
@@ -8,22 +8,44 @@
 #include "modify.h"
 #include "variable.h"
 #include "error.h"
-#include <string>
-#include "../utils/gather_containers.h"
+#include "math_extra.h"
+#include "rbc_utils.h"
 #include "atom.h"
 #include "neighbor.h"
 #include "comm.h"
 #include <fstream>
 #include <iostream>
-#include <vector>
 #include <ios>
 
 using namespace LAMMPS_NS;
 
+namespace {
+  // aux structure used for easy sorting of linearized array of point
+  struct Point {
+    float tag, x, y, z;
+  };
+  bool operator< (Point i, Point j) { return (i.tag < j.tag); }
+
+
+  // helper for unordered_map object put/get
+  void put(int tag, int vertInd, std::unordered_map<int, int>& map)
+  {
+    map.insert(std::make_pair(tag, vertInd));
+  }
+
+  int get(const std::unordered_map<int, int>& map, int tag)
+  {
+    std::unordered_map<int, int>::const_iterator got = map.find(tag);
+    if (got == map.end())
+      throw "tags mapping is invalid";
+    return got->second;
+  }
+}
+
 /* ---------------------------------------------------------------------- */
 
 FixDumpMesh::FixDumpMesh(LAMMPS *lmp, int narg, char **arg) :
-  Fix(lmp, narg, arg), m_nglobalParticles(0)
+  Fix(lmp, narg, arg), m_nglobalParticles(0), m_maxArea(2.0)
 {
   if (narg < 5) error->all(FLERR,"Illegal fix print command");
 
@@ -53,13 +75,21 @@ int FixDumpMesh::setmask()
 void FixDumpMesh::setup(int)
 {
   // count n particles of interest
-  int nlocalParticles = 0;
+  std::vector<int> localVertInd2Tag;
   for (int i = 0; i < atom->nlocal; ++i) {
     if (atom->mask[i] & groupbit) {
-      ++nlocalParticles;
+      localVertInd2Tag.push_back( atom->tag[i] );
     }
   }
+  int nlocalParticles = localVertInd2Tag.size();
   MPI_Allreduce(&nlocalParticles, &m_nglobalParticles, 1, MPI_INT, MPI_SUM, world);
+
+  std::vector<int> globalVertInd2Tag;
+  allGatherUnionOfContainers(localVertInd2Tag, world, globalVertInd2Tag);
+  std::sort(globalVertInd2Tag.begin(), globalVertInd2Tag.end());
+  for (int i = 0; i < (int)globalVertInd2Tag.size(); ++i) {
+    put(globalVertInd2Tag[i], i, m_tags2VertInd);
+  }
 
   // collect all relevant triangles, assumed that topology is const
   std::vector<int> localTriangulation;
@@ -67,9 +97,9 @@ void FixDumpMesh::setup(int)
     if (atom->mask[i] & groupbit) {
       int num_angle = atom->num_angle[i];
       for (int m = 0; m < num_angle; ++m) {
-        localTriangulation.push_back(atom->angle_atom1[i][m]);
-        localTriangulation.push_back(atom->angle_atom2[i][m]);
-        localTriangulation.push_back(atom->angle_atom3[i][m]);
+          localTriangulation.push_back(atom->angle_atom1[i][m]);
+          localTriangulation.push_back(atom->angle_atom2[i][m]);
+          localTriangulation.push_back(atom->angle_atom3[i][m]);
       }
     }
   }
@@ -99,11 +129,6 @@ void FixDumpMesh::end_of_step()
 
 /* ---------------------------------------------------------------------- */
 
-struct Point {
-  float tag, x, y, z;
-};
-bool operator< (Point i, Point j) { return (i.tag < j.tag); }
-
 void FixDumpMesh::writeObj(const std::string& fileName, std::vector<float>& positions)
 {
   try
@@ -130,7 +155,16 @@ void FixDumpMesh::writeObj(const std::string& fileName, std::vector<float>& posi
 
       // write triangles
       for (std::vector<int>::const_iterator it = m_triangulation.begin(); it != m_triangulation.end(); it += 3) {
-        file << "f " << *(it) << " " << *(it + 1) << " " << *(it + 2) << std::endl;
+        // Skip triangles which intersect domain borders
+        int vi[] = {get(m_tags2VertInd, *(it)), get(m_tags2VertInd, *(it + 1)), get(m_tags2VertInd, *(it + 2))};
+        float bma[3] = {pPoints[vi[0]].x - pPoints[vi[1]].x, pPoints[vi[0]].y - pPoints[vi[1]].y, pPoints[vi[0]].z - pPoints[vi[1]].z};
+        float cma[3] = {pPoints[vi[1]].x - pPoints[vi[2]].x, pPoints[vi[1]].y - pPoints[vi[2]].y, pPoints[vi[1]].z - pPoints[vi[2]].z};
+        float area = 0.5 * ((bma[1]*cma[2] - bma[2]*cma[1])*(bma[1]*cma[2] - bma[2]*cma[1]) +
+                            (bma[2]*cma[0] - bma[0]*cma[2])*(bma[2]*cma[0] - bma[0]*cma[2]) +
+                            (cma[0]*bma[1] - bma[0]*cma[1])*(cma[0]*bma[1] - bma[0]*cma[1]));
+        if (area < m_maxArea) {
+          file << "f " << vi[0] + 1 << " " << vi[1] + 1 << " " << vi[2] + 1 << std::endl;
+        }
       }
     }
   }
