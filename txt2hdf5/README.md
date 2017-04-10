@@ -9,13 +9,17 @@ which is header-only library to work with different formats.
 Example:
 In case if you simulate a flow problem in LAMMPS, write in your script:
 
+```C++
 compute cc2 all chunk/atom bin/3d x center 0.5 y center 0.5 z center 0.5
 fix profile2 all ave/chunk 10 10 100 cc2 vx vy vz norm all file vel3d.txt
+```
 
-As the result of execution, you will get vel3d.txt. This file can contain several frames (niterations/100 in our case), so 
-if we want to examine the firts frame we specify:
+As the result of execution, you will get `vel3d.txt`. This file can contain several frames (`niterations/100` in our case), so 
+if we want to examine the first frame, we specify:
 
+```C++
 ./txt2hdf5 vel3d.txt outFileName 1 0.5 0.5 0.5
+```
 
 Note, that we also specified the bin size (0.5 for all three dimentions).
 
